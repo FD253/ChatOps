@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.13/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.13/datatables.min.js"></script>
+
+    <meta charset="UTF-8">
+    <title>Control panel</title>
+</head>
+<script>
+    var data_per_user = [];
+    var questions;
+    var unique_users = {};
+    var g_data;
+    function get_data() {
+        var def = $.Deferred();
+
+        $.ajax("/api/petition/").done(function(data){
+            var requests = [];
+            g_data = data;
+            requests.push(get_user(data));
+
+            $.when.apply($, requests).then(function() { def.resolve(); });
+        });
+
+        return def.promise();
+    }
+
+    function get_user(data) {
+        var def = $.Deferred(),
+                requests = [];
+        for (var i = 0; i<data.length; i++) {
+            // TODO: Inefficient. Search for a way to avoid asking for the same user
+            // Another option. Iterate over users instead of petitions
+            requests.push($.ajax("/api/user_id/".concat(data[i].user).concat('/')).done(function(data2){
+                unique_users[data2.id] = data2
+            }))
+        }
+
+        $.when.apply($, requests).then(function() { def.resolve(); });
+
+        return def.promise();
+    }
+
+    function main(){
+        $.when(get_data()).done(function(){
+            console.log('Done');
+
+            document.getElementById('servers').innerHTML = g_data.length;
+            document.getElementById('users').innerHTML = String(Object.keys(unique_users).length);
+            //TODO: This is very specific for the demo questionnaire
+            var aws_regions = {};
+            var os = {};
+            for (var i=0; i<g_data.length; i++){
+                aws_regions[g_data[i].questionnaire[0].answer_letter] = 1;
+                os[g_data[i].questionnaire[1].answer_letter] = 1;
+            }
+            document.getElementById('aws_regions').innerHTML = String(Object.keys(aws_regions).length);
+            document.getElementById('os').innerHTML = String(Object.keys(os).length);
+
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open('GET', '/api/questionnaire/58d04f6e373f750fcf6e7fef', true);
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState == 4) {
+                    if(xmlhttp.status == 200) {
+                        questions = JSON.parse(xmlhttp.responseText).questions;
+                        Object.keys(unique_users).forEach(function(key){
+                            var regions = {};
+                            var os_types = {};
+                            var n_instances = 0;
+                            for (var i=0; i<g_data.length; i++){
+                                if (g_data[i].user == key) {
+                                    n_instances++;
+                                    // Region
+                                    questions[0].answers.forEach(function(ans){
+                                        if (ans.letter == g_data[i].questionnaire[0].answer_letter){
+                                            regions[ans.letter] = g_data[i].questionnaire[0].answer_letter
+                                        }
+                                    });
+                                    // OS type
+                                    questions[2].answers.forEach(function(ans){
+                                        if (ans.letter == g_data[i].questionnaire[2].answer_letter){
+                                            os_types[ans.letter] = g_data[i].questionnaire[2].answer_letter
+                                        }
+                                    })
+                                }
+                            }
+                            var l_regions = $.map(regions, function(value, index) {
+                                return [value];
+                            });
+                            var l_os_types = $.map(os_types, function(value, index) {
+                                return [value];
+                            });
+                            data_per_user.push([unique_users[key].user,
+                                unique_users[key].charge_code,
+                                l_regions, String(n_instances), l_os_types])
+                        });
+                        $('#example').removeAttr('hidden')
+                        $('#example').DataTable( {
+                            data: data_per_user,
+                            columns: [
+                                { title: "Username" },
+                                { title: "Charge Code" },
+                                { title: "Amazon Region" },
+                                { title: "Number of Instances" },
+                                { title: "OS Type" }
+                            ],
+                            aaSorting: [[3, 'desc']],
+                            columnDefs: [{
+                                "targets": 2,
+                                "render": function(data, type, row, meta){
+                                    var str = '';
+                                    row[2].forEach(function(l){
+                                        questions[0].answers.forEach(function(ans){
+                                            if (ans.letter == l){
+                                                str += ans.answer.concat('. ')
+                                            }
+                                        })
+                                    });
+                                    return str
+                                }
+                            }, {
+                                "targets": 4,
+                                "render": function(data, type, row, meta){
+                                    var str = '';
+                                    row[4].forEach(function(l){
+                                        questions[2].answers.forEach(function(ans){
+                                            if (ans.letter == l){
+                                                str += ans.answer.concat('. ')
+                                            }
+                                        })
+                                    });
+                                    return str
+                                }
+                            }]
+                        });
+                    }
+                }
+            };
+            xmlhttp.send(null);
+        });
+    }
+
+</script>
+<body onload="main()">
+<style>
+    .item {
+        display: inline-block;
+        border-style: solid;
+        flex: 1;
+    }
+</style>
+<div class="col-md-8">
+    <h1>Control Panel</h1>
+    <br>
+    <div id="big" style="text-align:center; display: flex;">
+        <div id="div_servers" class="item">
+            <h2 id="servers">#</h2>
+            <p>Servers</p>
+        </div>
+        <div id="div_aws_regions" class="item">
+            <h2 id="aws_regions">#</h2>
+            <p>AWS Region</p>
+        </div>
+        <div id="div_users" class="item">
+            <h2 id="users">#</h2>
+            <p>Users</p>
+        </div>
+        <div id="div_os" class="item">
+            <h2 id="os">#</h2>
+            <p>OS</p>
+        </div>
+    </div>
+    <br>
+    <h2>User details</h2>
+    <br>
+    <table id="example" class="display" cellspacing="0" width="100%" hidden>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Charge Code</th>
+                <th>Amazon Region</th>
+                <th>Number of Instances</th>
+                <th>OS Type</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+</body>
+</html>

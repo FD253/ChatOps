@@ -15,177 +15,240 @@
         }
     </script>
     <head>
-        <title>AWS</title>
+        <title>ChatOps</title>
     </head>
     <body onload="load_questions()">
-        <div id="chat">
-            <p class="bot_message">Welcome {username}</p>
+        <div class="right">
+            <div id="chat">
+                <p class="bot_message">Welcome. Please tell me your name.</p>
+            </div>
+            <input type="text" id="input" size="50">
         </div>
-        <input type="text" id="input">
-    <script type="text/javascript">
+        <div class="left">
+            <div id="ticket" class="ticket">
+            </div>
+        </div>
+    </body>
+    <style>
+        #chat{
+            max-width: 86%;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .bot_message{
+            align: 'left';
+            color: blue;
+        }
+        .user_message{
+            color: red;
+        }
+        .right{
+            width: 33%;
+            float: right;
+        }
+        .left{
+            width: auto;
+            overflow: hidden;
+            overflow-y: auto;
+        }
+        .ticket{
+            margin: 50%;
+            width: 25%;
+            border: 3px solid green;
+            text-align: center;
+            padding: 5px;
+        }
+
+    </style>
+    <script>
+        var user_data;
         var questions;
         var petition = {};
         petition.questionnaire = [];
-        petition.user = 'user or something'
         document.getElementById("input")
             .addEventListener("keyup", function(event) {
-            event.preventDefault();
-            if (event.keyCode == 13) {
-                if (document.getElementById("input").value!='') {
-                    chat = document.getElementById('chat');
-                    var para = document.createElement("P");
-                    para.className = 'user_message message';
-                    para.align = 'right';
-                    var t = document.createTextNode(document.getElementById('input').value);
-                    para.appendChild(t);
-                    chat.appendChild(para);
-                    document.getElementById("input").value = '';
-                    bot_messages = document.getElementsByClassName('bot_message');
-                    user_messages = document.getElementsByClassName('user_message');
-                    charge_code_message = 'What is your charge code?';
-                    messages = document.getElementsByClassName('message');
+                event.preventDefault();
+                if (event.keyCode == 13) {
+                    if (document.getElementById("input").value!='') {
+                        chat = document.getElementById('chat');
+                        var para = document.createElement("P");
+                        para.className = 'user_message message';
+                        para.align = 'right';
+                        var t = document.createTextNode(document.getElementById('input').value);
+                        para.appendChild(t);
+                        chat.appendChild(para);
+                        document.getElementById("input").value = '';
+                        bot_messages = document.getElementsByClassName('bot_message');
+                        user_messages = document.getElementsByClassName('user_message');
+                        charge_code_message = 'What is your charge code?';
+                        messages = document.getElementsByClassName('message');
 
-                    function send_petition(){
-                        xmlhttp.onreadystatechange = function() {
-                            if (xmlhttp.readyState == XMLHttpRequest.DONE) {
-                                if(xmlhttp.status == 201){
-                                    m='Your server is being commissioned...'
-                                    bot_simple_message(m)
-                                    m='Posting the details in 2 minutes'
-                                    bot_simple_message(m)
-                                }else{
-                                    m='ERROR'
-                                    bot_simple_message(m)
-                                }
-                                chat.scrollTop = chat.scrollHeight;
+                        function validate_charge_code(charge_code){
+                            if (user_data.charge_code == charge_code) {
+                                petition.user = user_data.id;
+                                post_1st_question()
+                            }
+                            else{
+                                m = 'Invalid charge code';
+                                bot_simple_message(m);
+                                bot_simple_message(charge_code_message)
                             }
                         }
-                        xmlhttp.open("post", "/api/petition/");
-                        xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                        xmlhttp.send(JSON.stringify(petition));
-                    }
-
-                    function makeOL(array) {
-                        var list = document.createElement('ol');
-                        list.type = 'a';
-                        list.className = 'bot_message message';
-                        list.align = 'left';
-                        for(var i = 0; i < array.length; i++) {
-                            var item = document.createElement('li');
-                            item.appendChild(document.createTextNode(array[i]));
-                            list.appendChild(item);
+                        function validate_user(user){
+                            xmlhttp.onreadystatechange = function() {
+                                if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+                                    if (xmlhttp.status == 404){
+                                        m='The user does not exist, try again';
+                                        bot_simple_message(m);
+                                    }
+                                    if (xmlhttp.status == 200){
+                                        user_data = JSON.parse(xmlhttp.responseText);
+                                        bot_simple_message(charge_code_message);
+                                    }
+                                    chat.scrollTop = chat.scrollHeight;
+                                }
+                            };
+                            xmlhttp.open("get", "/api/user/".concat(user));
+                            xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                            xmlhttp.send(null);
                         }
-                        return list;
-                    }
 
-                    function bot_simple_message(message){
-                        var para = document.createElement("P");
-                        para.className = 'bot_message message';
-                        para.align = 'left';
-                        para.appendChild(document.createTextNode(message));
-                        chat.appendChild(para)
-                    }
+                        function send_petition(){
+                            xmlhttp.onreadystatechange = function() {
+                                if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+                                    if(xmlhttp.status == 201){
+                                        m='Your server is being commissioned...';
+                                        bot_simple_message(m);
+                                        m='Posting the details in 2 minutes';
+                                        bot_simple_message(m);
+                                    }else{
+                                        m='ERROR';
+                                        bot_simple_message(m);
+                                    }
+                                    chat.scrollTop = chat.scrollHeight;
+                                }
+                            };
+                            xmlhttp.open("POST", "/api/petition/", true);
+                            xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                            xmlhttp.send(JSON.stringify(petition));
+                        }
 
-                    function post_1st_question(){
-                        var para = document.createElement("P");
-                        para.className = 'bot_message message';
-                        para.align = 'left';
+                        function makeOL(array) {
+                            var list = document.createElement('ol');
+                            list.type = 'a';
+                            list.className = 'bot_message message';
+                            list.align = 'left';
+                            for(var i = 0; i < array.length; i++) {
+                                var item = document.createElement('li');
+                                item.appendChild(document.createTextNode(array[i]));
+                                list.appendChild(item);
+                            }
+                            return list;
+                        }
 
-                        answers = questions[0].answers.map(function(answer){
-                            return answer.answer});
+                        function bot_simple_message(message){
+                            var para = document.createElement("P");
+                            para.className = 'bot_message message';
+                            para.align = 'left';
+                            para.appendChild(document.createTextNode(message));
+                            chat.appendChild(para);
+                        }
 
-                        para.appendChild(document.createTextNode(questions[0].question));
-                        chat.appendChild(para);
-                        chat.appendChild(makeOL(answers));
-                    }
+                        function post_1st_question(){
+                            var para = document.createElement("P");
+                            para.className = 'bot_message message';
+                            para.align = 'left';
 
-                    function post_n_question(n){
-                        var para = document.createElement("P");
-                        para.className = 'bot_message message';
-                        para.align = 'left';
-                        try{
-                            answers = questions[n].answers.map(function(answer){
+                            answers = questions[0].answers.map(function(answer){
                                 return answer.answer});
-                            para.appendChild(document.createTextNode(questions[n].question));
+
+                            para.appendChild(document.createTextNode(questions[0].question));
                             chat.appendChild(para);
                             chat.appendChild(makeOL(answers));
                         }
-                        catch(err){}
-                    }
 
-                    if (bot_messages[bot_messages.length - 1].innerHTML.startsWith('<li>')){
-                        last_question = bot_messages[bot_messages.length -2].innerHTML;
-                        for (var i=0; i<questions.length; i++){
-                            if (questions[i].question == last_question){
-                                flag = true
-                                for (var j=0; j<questions[i].answers.length; j++) {
-                                    if (questions[i].answers[j].letter == user_messages[user_messages.length - 1].innerHTML) {
-                                        petition.questionnaire.push({
-                                            'question_number': questions[i].number,
-                                            'answer_letter': questions[i].answers[j].letter
-                                        })
-                                        post_n_question(i + 1)
-                                        flag = false
-                                        break
+                        function post_n_question(n){
+                            var para = document.createElement("P");
+                            para.className = 'bot_message message';
+                            para.align = 'left';
+                            try{
+                                answers = questions[n].answers.map(function(answer){
+                                    return answer.answer});
+                                para.appendChild(document.createTextNode(questions[n].question));
+                                chat.appendChild(para);
+                                chat.appendChild(makeOL(answers));
+                            }
+                            catch(err){}
+                        }
+
+                        if (bot_messages[bot_messages.length - 1].innerHTML.startsWith('<li>')){
+                            last_question = bot_messages[bot_messages.length - 2].innerHTML;
+                            for (var i=0; i<questions.length; i++){
+                                if (questions[i].question == last_question){
+                                    flag = true;
+                                    for (var j=0; j<questions[i].answers.length; j++) {
+                                        if (questions[i].answers[j].letter == user_messages[user_messages.length - 1].innerHTML) {
+                                            if (questions[i].answers[j].active){
+                                                petition.questionnaire.push({
+                                                    'question_number': questions[i].number,
+                                                    'answer_letter': questions[i].answers[j].letter
+                                                });
+                                                var ticket_row = document.createElement("P");
+                                                ticket_row.appendChild(document.createTextNode(
+                                                        questions[i].related_theme.concat(': ').concat(
+                                                                questions[i].answers[j].answer)))
+                                                ticket = document.getElementById('ticket');
+                                                ticket.appendChild(ticket_row);
+                                                post_n_question(i + 1);
+                                                flag = false;
+                                                break
+                                            }
+                                        }
                                     }
-                                }
-                                if (flag){
-                                    if (questions[i].number == 1) {
-                                        var para = document.createElement("P");
-                                        para.className = 'bot_message message';
-                                        para.align = 'left';
-                                        para.appendChild(document.createTextNode('Please select a valid option'));
-                                        chat.appendChild(para)
-                                        post_1st_question()
-                                        break
-                                    }
-                                    else{
-                                        var para = document.createElement("P");
-                                        para.className = 'bot_message message';
-                                        para.align = 'left';
-                                        para.appendChild(document.createTextNode('Please select a valid option'));
-                                        chat.appendChild(para)
-                                        post_n_question(i)
-                                        break
+                                    if (flag){
+                                        if (questions[i].number == 1) {
+                                            var para = document.createElement("P");
+                                            para.className = 'bot_message message';
+                                            para.align = 'left';
+                                            para.appendChild(document.createTextNode('Please select a valid option'));
+                                            chat.appendChild(para);
+                                            post_1st_question();
+                                            break
+                                        }
+                                        else{
+                                            var para = document.createElement("P");
+                                            para.className = 'bot_message message';
+                                            para.align = 'left';
+                                            para.appendChild(document.createTextNode('Please select a valid option'));
+                                            chat.appendChild(para);
+                                            post_n_question(i);
+                                            break
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    if (bot_messages[bot_messages.length - 1].innerHTML.startsWith('<li>')) {
-                        if (messages[messages.length - 1].className.includes('user')){
-                            answers = questions[questions.length-1].answers.map(function(answer){
-                                return answer.letter});
-                            if (answers.includes(messages[messages.length - 1].innerHTML)){
-                                send_petition()
+                        if (bot_messages[bot_messages.length - 1].innerHTML.startsWith('<li>')) {
+                            if (messages[messages.length - 1].className.includes('user')){
+                                answers = questions[questions.length-1].answers.map(function(answer){
+                                    return answer.letter});
+                                if (answers.includes(messages[messages.length - 1].innerHTML)){
+                                    send_petition()
+                                }
                             }
                         }
+                        if (bot_messages[bot_messages.length - 1].innerHTML.startsWith(charge_code_message)){
+                            validate_charge_code(user_messages[user_messages.length -1].innerHTML);
+                        }
+                        if (bot_messages[bot_messages.length - 1].innerHTML.startsWith('Welcome')) {
+                            validate_user(user_messages[user_messages.length -1].innerHTML);
+                        }
+                        if (bot_messages[bot_messages.length - 1].innerHTML.startsWith('The user does')) {
+                            validate_user(user_messages[user_messages.length -1].innerHTML);
+                        }
+                        chat.scrollTop = chat.scrollHeight;
                     }
-                    if (bot_messages[bot_messages.length - 1].innerHTML.startsWith(charge_code_message)){
-                        petition.charge_code = user_messages[user_messages.length-1].innerHTML;
-                        post_1st_question()
-                    }
-                    if (bot_messages[bot_messages.length - 1].innerHTML.startsWith('Welcome')) {
-                        bot_simple_message(charge_code_message)
-                    }
-                    chat.scrollTop = chat.scrollHeight;
                 }
-            }
-        });
+            });
     </script>
-    <style type="text/css">
-    #chat{
-        max-width: 400px;
-        max-height: 300px;
-        overflow-y: auto;
-    }
-    .bot_message{
-        align:'left';
-        color:blue;
-    }
-    .user_message{
-        color:red;
-    }
-    </style>
-    </body>
 </html>
