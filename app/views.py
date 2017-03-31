@@ -40,12 +40,12 @@ class PetitionCreate(generics.CreateAPIView):
 
             #instance_id = json.loads(result.stdout.read().decode('utf-8').replace('\r', '').replace('\n', ''))['Instances'][0]['InstanceId']
             #get_ip_command = 'sleep 40; aws ec2 describe-instance-status --instance-ids ' + instance_id + '|grep PublicIpAddress| awk \'{print $2}\'| cut -d, -f1| sed \'s/"//g\''
-            #result = subprocess.Popen(get_ip_command, stdout=subprocess.PIPE, shell=True)
+            #ip = subprocess.Popen(get_ip_command, stdout=subprocess.PIPE, shell=True)
             #if working then save. but i can't test it so save anyways for now.
             #serializer.save()
             pet.save()
             headers = self.get_success_headers(serializer.data)
-            return Response(data={'ip': '123.123.123.123'}, status=status.HTTP_200_OK, headers=headers)
+            return Response(data={'ip': ip}, status=status.HTTP_200_OK, headers=headers)
 
 
         return Response({
