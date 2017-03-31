@@ -114,13 +114,12 @@
                         }
 
                         function send_petition(){
+                            var xmlhttp = new XMLHttpRequest();
                             xmlhttp.onreadystatechange = function() {
                                 if (xmlhttp.readyState == XMLHttpRequest.DONE) {
-                                    if(xmlhttp.status == 201){
-                                        m='Your server is being commissioned...';
-                                        bot_simple_message(m);
-                                        m='Posting the details in 2 minutes';
-                                        bot_simple_message(m);
+                                    if(xmlhttp.status == 200){
+                                        m='Public IP: '.concat(JSON.parse(xmlhttp.response).ip)
+                                        bot_simple_message(m)
                                     }else{
                                         m='ERROR';
                                         bot_simple_message(m);
@@ -128,7 +127,7 @@
                                     chat.scrollTop = chat.scrollHeight;
                                 }
                             };
-                            xmlhttp.open("POST", "/api/petition/", true);
+                            xmlhttp.open("POST", "/api/petition/create/", true);
                             xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
                             xmlhttp.send(JSON.stringify(petition));
                         }
@@ -233,6 +232,10 @@
                                 answers = questions[questions.length-1].answers.map(function(answer){
                                     return answer.letter});
                                 if (answers.includes(messages[messages.length - 1].innerHTML)){
+                                    m='Your server is being commissioned...';
+                                    bot_simple_message(m);
+                                    m='Posting the details in 2 minutes';
+                                    bot_simple_message(m);
                                     send_petition()
                                 }
                             }
