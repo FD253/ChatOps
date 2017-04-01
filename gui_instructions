@@ -1,0 +1,30 @@
+Requirements for the dynamic form
+    node 6.2.1
+    npm 3.9.3
+
+Installation steps:
+
+npm install -g create-react-app
+npm install -g serve
+
+Use the create-react-app command to create a new app
+this could be in any place but better if on the same level as app
+
+create-react-app q_form
+q_form could be whatever you want
+this creates q_form folder with default app
+
+Inside q_form:
+npm install react-form
+npm install react-jsonschema-form
+
+Replace the App.js and index.js files with the ones I sent you.
+
+For testing:
+npm start
+
+For deploy:
+npm run build
+serve -s build
+
+
