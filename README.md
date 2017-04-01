@@ -6,7 +6,7 @@ Setup steps:
 
 Clone repo
 
-Install dependencies using "pip install -r requirements.txt" (using pip3)
+Install dependencies using "pip install -r requirements.txt" (using pip3 or pip3.5 if not using virtualenv)
 
 Run python manage.py runserver ip:port to run dev server and allow access from outside (not recommended for production).
 
