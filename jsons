@@ -1,0 +1,147 @@
+Questionnaire:
+
+{    
+    "questionnaire": "test",
+    "questions": [
+        {
+            "related_theme": "AWS region",
+            "number": 1,
+            "question": "Please let me know the AWS region:",
+            "answers": [
+                {
+                    "letter": "a",
+                    "answer": "Virginia",
+                    "active": false
+                },
+                {
+                    "letter": "b",
+                    "answer": "Ohio",
+                    "active": true
+                },
+                {
+                    "letter": "c",
+                    "answer": "California",
+                    "active": false
+                },
+                {
+                    "letter": "d",
+                    "answer": "Mumbai",
+                    "active": false
+                },
+                {
+                    "letter": "e",
+                    "answer": "Germany",
+                    "active": false
+                },
+                {
+                    "letter": "f",
+                    "answer": "London",
+                    "active": false
+                },
+                {
+                    "letter": "g",
+                    "answer": "Ireland",
+                    "active": false
+                }
+            ]
+        },
+        {
+            "related_theme": "Type of instance",
+            "number": 2,
+            "question": "What type of instance would you want to deploy?",
+            "answers": [
+                {
+                    "letter": "a",
+                    "answer": "Small",
+                    "active": true
+                },
+                {
+                    "letter": "b",
+                    "answer": "Medium",
+                    "active": false
+                },
+                {
+                    "letter": "c",
+                    "answer": "Large",
+                    "active": false
+                },
+                {
+                    "letter": "d",
+                    "answer": "X-Large",
+                    "active": false
+                }
+            ]
+        },
+        {
+            "related_theme": "Type of OS",
+            "number": 3,
+            "question": "What type of OS would you want to run on your instance?",
+            "answers": [
+                {
+                    "letter": "a",
+                    "answer": "AWS Linux",
+                    "active": true
+                },
+                {
+                    "letter": "b",
+                    "answer": "Ubuntu 16.04",
+                    "active": true
+                },
+                {
+                    "letter": "c",
+                    "answer": "Redhat 7.2",
+                    "active": false
+                },
+                {
+                    "letter": "d",
+                    "answer": "Windows 2000",
+                    "active": false
+                }
+            ]
+        }
+    ]
+}
+
+
+Users:
+
+{
+    "user": "mikeai",
+    "charge_code": "XYZ123"
+}
+
+{
+    "user": "Chris",
+    "charge_code": "ZZZ100"
+}
+
+{
+    "user": "Tae",
+    "charge_code": "ZZZ100"
+}
+
+
+{
+    "user": "Efren",
+    "charge_code": "YYY300"
+}
+
+{
+    "user": "Sal",
+    "charge_code": "YYY300"
+}
+
+
+AMI:
+
+{
+    "ami": "6ceace09",
+    "description": "AWS Linux in Ohio Region",
+    "summary": "aws-linux"
+}
+
+{
+    "ami": "afebcfca",
+    "description": "Ubuntu 16.04 in Ohio Region",
+    "summary": "ubuntu-16.04"
+}
